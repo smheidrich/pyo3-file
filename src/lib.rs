@@ -86,9 +86,14 @@ impl Read for PyFileLikeObject {
         let py = gil.python();
 
         if self.is_text_io {
+            if buf.len() < 4 {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other, "buffer size must be at least 4 bytes"
+                ));
+            }
             let res = self
                 .inner
-                .call_method(py, "read", (buf.len(),), None)
+                .call_method(py, "read", (buf.len()/4,), None)
                 .map_err(pyerr_to_io_err)?;
             let pystring: &PyString = res
                 .cast_as(py)
